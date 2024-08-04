@@ -16,6 +16,8 @@ module "web_vpc" {
     Terraform = "true"
     Environment = "dev"
   }
+
+  map_public_ip_on_launch = true
 }
 
 resource "aws_instance" "web" {
