@@ -2,7 +2,7 @@ resource "aws_security_group" "ssh" {
   name        = "ssh"
   description = "Allow ssh in"
 
-  vpc_id = data.aws_vpc.default.id
+  vpc_id = module.web_vpc.vpc_id
 }
 
 resource "aws_key_pair" "deployer" {
@@ -15,7 +15,7 @@ resource "aws_security_group_rule" "web_ssh_in" {
   from_port    = 22
   to_port      = 22
   protocol     = "tcp"
-  cidr_blocks  = [data.aws_vpc.default.cidr_block]
+  cidr_blocks  = [module.web_vpc.vpc_cidr_block]
 
   security_group_id = aws_security_group.ssh.id
 }
