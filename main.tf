@@ -34,25 +34,24 @@ module "web_vpc" {
   }
 }
 
-resource "aws_instance" "web" {
-  ami           = "ami-060e277c0d4cce553"
-  instance_type = var.instance_type
-  
-  vpc_security_group_ids = [
-    module.web_sg.security_group_id,
-    aws_security_group.ssh.id
-  ]
 
-  subnet_id = module.web_vpc.public_subnets[0]
+module "web_autoscaling" {
+  source   = "terraform-aws-modules/autoscaling/aws"
+  version  = "7.7.0"
+  # insert the 1 required variable here
+  name     = "web"
+  min_size = 1
+  max_size = 2
 
-  key_name = aws_key_pair.deployer.key_name
-
-  tags = {
-    Name = "HelloWorld"
-  }
+  vpc_zone_identifier = module.web_vpc.public_subnets
+  target_group_arns   = module.web_alb.target_groups.target_group_arns
+  security_groups     = [module.web_sg.security_group_id]
+  instance_type       = var.instance_type
+  image_id            = var.image_id
+  key_name            = aws_key_pair.deployer.key_name
 }
 
-module "alb" {
+module "web_alb" {
   source = "terraform-aws-modules/alb/aws"
 
   name    = "web-alb"
@@ -130,7 +129,8 @@ module "web_sg" {
 
   ingress_rules = [
     "http-80-tcp",
-    "https-443-tcp"
+    "https-443-tcp",
+    "ssh-tcp"
   ]
 
   ingress_cidr_blocks = ["0.0.0.0/0"]
