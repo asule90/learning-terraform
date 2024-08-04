@@ -1,19 +1,3 @@
-data "aws_ami" "app_ami" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["bitnami-tomcat-*-x86_64-hvm-ebs-nami"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  # owners = ["979382823631"] # Bitnami
-}
-
 data "aws_vpc" "default" {
   default     = true
   cidr_block  = "172.31.0.0/16"
@@ -35,7 +19,7 @@ module "web_vpc" {
 }
 
 resource "aws_instance" "web" {
-  ami           = "ami-060e277c0d4cce553"
+  ami           = var.image_id
   instance_type = var.instance_type
   
   vpc_security_group_ids = [
@@ -61,7 +45,8 @@ module "web_sg" {
 
   ingress_rules = [
     "http-80-tcp",
-    "https-443-tcp"
+    "https-443-tcp",
+    "ssh-tcp"
   ]
 
   ingress_cidr_blocks = ["0.0.0.0/0"]
@@ -71,6 +56,4 @@ module "web_sg" {
   ]
 
   egress_cidr_blocks = ["0.0.0.0/0"]
-
-  # vpc_id = data.aws_vpc.default.id
 }
