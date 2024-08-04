@@ -23,7 +23,7 @@ module "web_vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
   name = "dev"
-  cidr = "10.0.0.0/16"
+  cidr = "172.31.0.0/16"
 
   azs             = ["ap-southeast-1a", "ap-southeast-1b", "ap-southeast-1c"]
   public_subnets  = ["172.31.16.0/20", "172.31.32.0/20", "172.31.0.0/20"]
@@ -59,7 +59,7 @@ module "alb" {
   vpc_id  = module.web_vpc.vpc_id
   subnets = module.web_vpc.public_subnets
 
-  security_groups = module.web_sg.security_group_id
+  security_groups = [module.web_sg.security_group_id]
 
   # Security Group
   security_group_ingress_rules = {
@@ -81,7 +81,7 @@ module "alb" {
   security_group_egress_rules = {
     all = {
       ip_protocol = "-1"
-      cidr_ipv4   = "10.0.0.0/16"
+      cidr_ipv4   = "0.0.0.0/0"
     }
   }
 
