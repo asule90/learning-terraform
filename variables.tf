@@ -4,7 +4,6 @@ variable "instance_type" {
 }
 
 variable "image_id" {
- description = "Ubuntu Image"
-#  default     = "ami-060e277c0d4cce553"
- default     = "ami-07c80be28c02475ca"
+ description = "Ubuntu image"
+ default     = "ami-060e277c0d4cce553"
 }

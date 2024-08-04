@@ -1,19 +1,3 @@
-data "aws_ami" "app_ami" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["bitnami-tomcat-*-x86_64-hvm-ebs-nami"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  # owners = ["979382823631"] # Bitnami
-}
-
 data "aws_vpc" "default" {
   default     = true
   cidr_block  = "172.31.0.0/16"
@@ -34,95 +18,21 @@ module "web_vpc" {
   }
 }
 
+resource "aws_instance" "web" {
+  ami           = var.image_id
+  instance_type = var.instance_type
+  
+  vpc_security_group_ids = [
+    module.web_sg.security_group_id,
+    aws_security_group.ssh.id
+  ]
 
-module "web_autoscaling" {
-  source   = "terraform-aws-modules/autoscaling/aws"
-  version  = "7.7.0"
-  # insert the 1 required variable here
-  name     = "web"
-  min_size = 1
-  max_size = 2
+  subnet_id = module.web_vpc.public_subnets[0]
 
-  create_traffic_source_attachment  = true
-  vpc_zone_identifier               = module.web_vpc.public_subnets
-  # target_group_arns                 = module.web_alb.target_groups.target_group_arns
-  traffic_source_identifier         = module.web_alb.target_groups["ex_asg"].arn
-  security_groups                   = [module.web_sg.security_group_id]
-  instance_type                     = var.instance_type
-  image_id                          = var.image_id
-  key_name                          = aws_key_pair.deployer.key_name
-}
-
-module "web_alb" {
-  source = "terraform-aws-modules/alb/aws"
-
-  name    = "web-alb"
-  vpc_id  = module.web_vpc.vpc_id
-  subnets = module.web_vpc.public_subnets
-
-  security_groups = [module.web_sg.security_group_id]
-
-  # Security Group
-  security_group_ingress_rules = {
-    all_http = {
-      from_port   = 80
-      to_port     = 80
-      ip_protocol = "tcp"
-      description = "HTTP web traffic"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-    all_https = {
-      from_port   = 443
-      to_port     = 443
-      ip_protocol = "tcp"
-      description = "HTTPS web traffic"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-  }
-  security_group_egress_rules = {
-    all = {
-      ip_protocol = "-1"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-  }
-
-  listeners = {
-    ex-http = {
-      port     = 80
-      protocol = "HTTP"
-
-      forward = {
-        target_group_key = "ex_asg"
-      }
-    }
-    # ex-https = {
-    #   port            = 443
-    #   protocol        = "HTTPS"
-    #   certificate_arn = "arn:aws:iam::123456789012:server-certificate/test_cert-123456789012"
-
-    #   forward = {
-    #     target_group_key = "ex-instance"
-    #   }
-    # }
-  }
-
-  target_groups = { 
-    ex_asg = {
-      backend_protocol                  = "HTTP"
-      backend_port                      = 80
-      target_type                       = "instance"
-      deregistration_delay              = 5
-
-      # There's nothing to attach here in this definition.
-      # The attachment happens in the ASG module above
-      create_attachment = false
-    }
-
-  }
+  key_name = aws_key_pair.deployer.key_name
 
   tags = {
-    Environment = "Development"
-    Project     = "Example"
+    Name = "HelloWorld"
   }
 }
 
@@ -146,6 +56,4 @@ module "web_sg" {
   ]
 
   egress_cidr_blocks = ["0.0.0.0/0"]
-
-  # vpc_id = data.aws_vpc.default.id
 }
