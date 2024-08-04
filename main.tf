@@ -23,8 +23,7 @@ resource "aws_instance" "web" {
   instance_type = var.instance_type
   
   vpc_security_group_ids = [
-    module.web_sg.security_group_id,
-    aws_security_group.ssh.id
+    module.web_sg.security_group_id
   ]
 
   subnet_id = module.web_vpc.public_subnets[0]
