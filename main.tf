@@ -13,11 +13,13 @@ module "web_vpc" {
   public_subnets  = ["172.31.16.0/20", "172.31.32.0/20", "172.31.0.0/20"]
 
   tags = {
-    Terraform = "true"
+    Terraform   = "true"
     Environment = "dev"
   }
 
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch          = true
+  default_vpc_enable_dns_hostnames = true
+  enable_dns_hostnames             = true
 }
 
 resource "aws_instance" "web" {
