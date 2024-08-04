@@ -104,13 +104,14 @@ module "web_alb" {
     # }
   }
 
-  target_groups = {
-    ex-instance = {
-      name_prefix      = "web-"
-      protocol         = "HTTP"
-      port             = 80
-      target_type      = "instance"
+  target_groups = { 
+    asg = {
+      name              = "asg-tg"
+      port              = 8080
+      protocol          = "HTTP"
+      vpc_id            = module.web_vpc.vpc_id
     }
+
   }
 
   tags = {
