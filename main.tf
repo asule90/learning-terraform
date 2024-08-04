@@ -43,12 +43,14 @@ module "web_autoscaling" {
   min_size = 1
   max_size = 2
 
-  vpc_zone_identifier = module.web_vpc.public_subnets
-  target_group_arns   = module.web_alb.target_groups.target_group_arns
-  security_groups     = [module.web_sg.security_group_id]
-  instance_type       = var.instance_type
-  image_id            = var.image_id
-  key_name            = aws_key_pair.deployer.key_name
+  create_traffic_source_attachment  = true
+  vpc_zone_identifier               = module.web_vpc.public_subnets
+  # target_group_arns                 = module.web_alb.target_groups.target_group_arns
+  traffic_source_identifier         = module.web_alb.target_groups["ex_asg"].arn
+  security_groups                   = [module.web_sg.security_group_id]
+  instance_type                     = var.instance_type
+  image_id                          = var.image_id
+  key_name                          = aws_key_pair.deployer.key_name
 }
 
 module "web_alb" {
@@ -90,7 +92,7 @@ module "web_alb" {
       protocol = "HTTP"
 
       forward = {
-        target_group_key = "ex-instance"
+        target_group_key = "ex_asg"
       }
     }
     # ex-https = {
@@ -105,11 +107,15 @@ module "web_alb" {
   }
 
   target_groups = { 
-    asg = {
-      name              = "asg-tg"
-      port              = 8080
-      protocol          = "HTTP"
-      vpc_id            = module.web_vpc.vpc_id
+    ex_asg = {
+      backend_protocol                  = "HTTP"
+      backend_port                      = 80
+      target_type                       = "instance"
+      deregistration_delay              = 5
+
+      # There's nothing to attach here in this definition.
+      # The attachment happens in the ASG module above
+      create_attachment = false
     }
 
   }
