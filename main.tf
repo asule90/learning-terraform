@@ -83,21 +83,15 @@ module "web_alb" {
 
   target_groups = { 
     ex_asg = {
-      backend_protocol        = "HTTP"
-      backend_port            = 80
-      target_type             = "instance"
-      deregistration_delay    = 5
-      targets = {
-        my_target = {
-          target_id = aws_instance.web.id
-          port      = 80
-        }
-      }
-
-      # There's nothing to attach here in this definition.
-      # The attachment happens in the ASG module above
-      # create_attachment     = false
+      name_prefix      = "web-"
+      protocol         = "HTTP"
+      port             = 80
+      target_type      = "instance"
+      target_id        = aws_instance.web.id
     }
+    # There's nothing to attach here in this definition.
+    # The attachment happens in the ASG module above
+    # create_attachment     = false
 
   }
 
