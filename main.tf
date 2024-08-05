@@ -27,7 +27,6 @@ resource "aws_instance" "web" {
   }
 }
 
-
 module "web_alb" {
   source = "terraform-aws-modules/alb/aws"
 
@@ -87,11 +86,12 @@ module "web_alb" {
       protocol         = "HTTP"
       port             = 80
       target_type      = "instance"
-      target_id        = aws_instance.web.id
+      # target_id        = aws_instance.web.id
+
+      # There's nothing to attach here in this definition.
+      # The attachment happens in the ASG module above
+      create_attachment     = false
     }
-    # There's nothing to attach here in this definition.
-    # The attachment happens in the ASG module above
-    # create_attachment     = false
 
   }
 
@@ -99,4 +99,22 @@ module "web_alb" {
     Environment = "Development"
     Project     = "Example"
   }
+}
+
+module "web_autoscaling" {
+  source   = "terraform-aws-modules/autoscaling/aws"
+  version  = "7.7.0"
+  # insert the 1 required variable here
+  name     = "web"
+  min_size = 1
+  max_size = 2
+
+  create_traffic_source_attachment  = true
+  vpc_zone_identifier               = data.aws_subnets.default.ids 
+  # target_group_arns                 = module.web_alb.target_groups.target_group_arns
+  traffic_source_identifier         = module.web_alb.target_groups["ex_asg"].arn
+  security_groups                   = [module.web_sg.security_group_id]
+  instance_type                     = var.instance_type
+  image_id                          = var.image_id
+  key_name                          = aws_key_pair.deployer.key_name
 }
