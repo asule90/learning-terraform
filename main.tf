@@ -16,6 +16,7 @@ resource "aws_instance" "web" {
   vpc_security_group_ids = [
     module.web_sg.security_group_id
   ]
+  subnet_id = tolist(data.aws_subnets.default.ids)[0]
 
   # subnet_id = data.aws_vpc.default.public_subnets[0]
 
@@ -32,6 +33,7 @@ module "web_alb" {
 
   name    = "web-alb"
   vpc_id  = data.aws_vpc.default.id
+  subnets = data.aws_subnets.default.ids 
 
   security_groups = [module.web_sg.security_group_id]
 
@@ -85,7 +87,12 @@ module "web_alb" {
       backend_port            = 80
       target_type             = "instance"
       deregistration_delay    = 5
-      target_id               = aws_instance.web.id
+      targets = {
+        my_target = {
+          target_id = aws_instance.web.id
+          port      = 80
+        }
+      }
 
       # There's nothing to attach here in this definition.
       # The attachment happens in the ASG module above
