@@ -1,26 +1,25 @@
+variable "vpc_id" {}
+
 data "aws_vpc" "default" {
-  default     = true
-  cidr_block  = "172.31.0.0/16"
+  id = var.vpc_id
 }
 
-module "web_vpc" {
-  source = "terraform-aws-modules/vpc/aws"
 
-  name = "dev"
-  cidr = "172.31.0.0/16"
+# custom VPC withou public interface (no need because it will behind ALB)
+# module "web_vpc" {
+#   source = "terraform-aws-modules/vpc/aws"
 
-  azs             = ["ap-southeast-1a", "ap-southeast-1b", "ap-southeast-1c"]
-  public_subnets  = ["172.31.16.0/20", "172.31.32.0/20", "172.31.0.0/20"]
+#   name = "dev"
+#   cidr = "172.31.0.0/16"
 
-  tags = {
-    Terraform   = "true"
-    Environment = "dev"
-  }
+#   azs             = ["ap-southeast-1a", "ap-southeast-1b", "ap-southeast-1c"]
+#   public_subnets  = ["172.31.16.0/20", "172.31.32.0/20", "172.31.0.0/20"]
 
-  map_public_ip_on_launch          = true
-  default_vpc_enable_dns_hostnames = true
-  enable_dns_hostnames             = true
-}
+#   tags = {
+#     Terraform   = "true"
+#     Environment = "dev"
+#   }
+# }
 
 resource "aws_instance" "web" {
   ami           = var.image_id
@@ -30,7 +29,7 @@ resource "aws_instance" "web" {
     module.web_sg.security_group_id
   ]
 
-  subnet_id = module.web_vpc.public_subnets[0]
+  # subnet_id = data.aws_vpc.default.public_subnets[0]
 
   key_name = aws_key_pair.deployer.key_name
 
@@ -43,8 +42,8 @@ module "web_sg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "5.1.2"
 
-  vpc_id = module.web_vpc.vpc_id
-  name    = "web_new"
+  vpc_id = data.aws_vpc.default.id
+  name    = "web_sg"
 
   ingress_rules = [
     "http-80-tcp",
