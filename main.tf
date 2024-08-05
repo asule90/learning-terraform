@@ -1,9 +1,6 @@
-variable "vpc_id" {}
-
 data "aws_vpc" "default" {
   id = var.vpc_id
 }
-
 
 # custom VPC withou public interface (no need because it will behind ALB)
 # module "web_vpc" {
