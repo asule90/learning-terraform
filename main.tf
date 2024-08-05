@@ -2,22 +2,6 @@ data "aws_vpc" "default" {
   id = var.vpc_id
 }
 
-# custom VPC withou public interface (no need because it will behind ALB)
-# module "web_vpc" {
-#   source = "terraform-aws-modules/vpc/aws"
-
-#   name = "dev"
-#   cidr = "172.31.0.0/16"
-
-#   azs             = ["ap-southeast-1a", "ap-southeast-1b", "ap-southeast-1c"]
-#   public_subnets  = ["172.31.16.0/20", "172.31.32.0/20", "172.31.0.0/20"]
-
-#   tags = {
-#     Terraform   = "true"
-#     Environment = "dev"
-#   }
-# }
-
 resource "aws_instance" "web" {
   ami           = var.image_id
   instance_type = var.instance_type
